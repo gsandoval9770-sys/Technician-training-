@@ -187,6 +187,67 @@ tr.flag-yellow td { background: #fffdf0 !important; }
 /* ── Toast ── */
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--text); color: white; padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 500; transition: transform .22s ease; z-index: 999; pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Lock screen ── */
+#lock-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: linear-gradient(135deg, #1a2e22 0%, #0f1a14 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+#lock-screen.hidden { display: none; }
+.lock-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  padding: 2.5rem 2.25rem;
+  width: 340px; max-width: 92vw;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 60px rgba(0,0,0,.4);
+}
+.lock-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--green); display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 1.25rem;
+  box-shadow: 0 4px 18px rgba(45,122,79,.5);
+}
+.lock-icon svg { width: 26px; height: 26px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lock-title { font-size: 20px; font-weight: 600; color: white; margin-bottom: 4px; letter-spacing: -.02em; }
+.lock-sub { font-size: 13px; color: rgba(255,255,255,.45); margin-bottom: 1.75rem; }
+.pin-dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
+.pin-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.3);
+  background: transparent; transition: all .15s;
+}
+.pin-dot.filled { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(45,122,79,.6); }
+.pin-dot.error { background: #e55; border-color: #e55; box-shadow: 0 0 8px rgba(220,80,80,.6); }
+.numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: .875rem; }
+.num-btn {
+  height: 58px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.07); color: white; font-size: 20px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .12s;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1px;
+}
+.num-btn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.22); }
+.num-btn:active { transform: scale(.95); background: rgba(255,255,255,.2); }
+.num-sub { font-size: 8px; font-weight: 500; letter-spacing: .1em; color: rgba(255,255,255,.35); }
+.num-btn.del-btn { font-size: 15px; }
+.num-btn.zero-btn { grid-column: 2; }
+.lock-err { font-size: 12px; color: #f87171; min-height: 18px; margin-top: .25rem; }
+.lock-footer { margin-top: 1.25rem; font-size: 11px; color: rgba(255,255,255,.25); }
+
+/* ── Change passcode modal ── */
+.pin-input-row { display: flex; gap: 8px; justify-content: center; margin-bottom: .5rem; }
+.pin-char {
+  width: 44px; height: 52px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2);
+  text-align: center; font-size: 22px; font-family: 'DM Mono', monospace;
+  color: var(--text); outline: none; transition: border-color .12s;
+}
+.pin-char:focus { border-color: var(--green); }
+.pin-hint { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 1rem; }
 </style>
 </head>
 <body>
@@ -223,6 +284,10 @@ tr.flag-yellow td { background: #fffdf0 !important; }
     <button class="sb-btn" onclick="openImport()">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Import program
+    </button>
+    <button class="sb-btn" onclick="openChangePasscode()">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Change passcode
     </button>
     <button class="sb-btn" onclick="exportProgram()">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -287,6 +352,78 @@ tr.flag-yellow td { background: #fffdf0 !important; }
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('modal-delete')">Cancel</button>
       <button class="btn" style="background:var(--red-bg);color:var(--red);border-color:#f0a090" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lock Screen -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <div class="lock-title">Skill Tracker</div>
+    <div class="lock-sub">Enter your passcode to continue</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="numpad">
+      <button class="num-btn" onclick="numPress('1')">1</button>
+      <button class="num-btn" onclick="numPress('2')">2<div class="num-sub">ABC</div></button>
+      <button class="num-btn" onclick="numPress('3')">3<div class="num-sub">DEF</div></button>
+      <button class="num-btn" onclick="numPress('4')">4<div class="num-sub">GHI</div></button>
+      <button class="num-btn" onclick="numPress('5')">5<div class="num-sub">JKL</div></button>
+      <button class="num-btn" onclick="numPress('6')">6<div class="num-sub">MNO</div></button>
+      <button class="num-btn" onclick="numPress('7')">7<div class="num-sub">PQRS</div></button>
+      <button class="num-btn" onclick="numPress('8')">8<div class="num-sub">TUV</div></button>
+      <button class="num-btn" onclick="numPress('9')">9<div class="num-sub">WXYZ</div></button>
+      <button class="num-btn zero-btn" onclick="numPress('0')">0</button>
+      <button class="num-btn del-btn" onclick="numDel()">&#x232B;</button>
+    </div>
+    <div class="lock-err" id="lock-err"></div>
+    <div class="lock-footer">Ophthalmic Technician Program</div>
+  </div>
+</div>
+
+<!-- Change Passcode Modal -->
+<div class="backdrop" id="modal-passcode">
+  <div class="modal">
+    <h3>Change passcode</h3>
+    <p>Enter your current passcode, then set a new 4-digit PIN.</p>
+    <div class="modal-row">
+      <label class="modal-label">Current passcode</label>
+      <div class="pin-input-row">
+        <input class="pin-char" id="cur0" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cur',0)">
+        <input class="pin-char" id="cur1" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cur',1)">
+        <input class="pin-char" id="cur2" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cur',2)">
+        <input class="pin-char" id="cur3" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cur',3)">
+      </div>
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">New passcode</label>
+      <div class="pin-input-row">
+        <input class="pin-char" id="new0" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('new',0)">
+        <input class="pin-char" id="new1" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('new',1)">
+        <input class="pin-char" id="new2" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('new',2)">
+        <input class="pin-char" id="new3" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('new',3)">
+      </div>
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">Confirm new passcode</label>
+      <div class="pin-input-row">
+        <input class="pin-char" id="cnf0" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cnf',0)">
+        <input class="pin-char" id="cnf1" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cnf',1)">
+        <input class="pin-char" id="cnf2" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cnf',2)">
+        <input class="pin-char" id="cnf3" maxlength="1" type="password" inputmode="numeric" oninput="pinNav('cnf',3)">
+      </div>
+    </div>
+    <div class="pin-hint" id="pin-change-err" style="color:var(--red);min-height:16px"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-passcode')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmChangePasscode()">Update passcode</button>
     </div>
   </div>
 </div>
@@ -659,10 +796,91 @@ function renderCandidate(cid) {
 
 function toast(msg,dur=2300){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur);}
 
-// ── Init ──
-const hasSaved=loadSaved();
-render();
-if(hasSaved&&prog.candidates.length>0) toast('Restored · '+prog.candidates.length+' candidate(s)');
+// ── Init handled by passcode system below ──
+
+// ── PASSCODE SYSTEM ──
+// Default passcode is 1234. Stored as SHA-256 hash in localStorage.
+// Change it inside the app via the lock icon in the sidebar footer.
+const DEFAULT_HASH = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'; // SHA-256 of "1234"
+const LOCK_KEY = 'opht_passcode_hash';
+const SESSION_KEY = 'opht_unlocked';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function getStoredHash() { return localStorage.getItem(LOCK_KEY) || DEFAULT_HASH; }
+
+let pinBuffer = '';
+function numPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updateDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 120);
+}
+function numDel() { pinBuffer = pinBuffer.slice(0,-1); updateDots(); clearLockErr(); }
+function updateDots(state) {
+  for (let i=0;i<4;i++) {
+    const dot = document.getElementById('dot-'+i);
+    if (!dot) return;
+    dot.className = 'pin-dot' + (state==='error'?' error':(i<pinBuffer.length?' filled':''));
+  }
+}
+function clearLockErr() { document.getElementById('lock-err').textContent=''; }
+async function checkPin() {
+  const hash = await sha256(pinBuffer);
+  if (hash === getStoredHash()) {
+    sessionStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('lock-screen').classList.add('hidden');
+    const hasSaved=loadSaved();
+    render();
+    if(hasSaved&&prog.candidates.length>0) toast('Restored · '+prog.candidates.length+' candidate(s)');
+  } else {
+    updateDots('error');
+    document.getElementById('lock-err').textContent='Incorrect passcode. Try again.';
+    setTimeout(()=>{ pinBuffer=''; updateDots(); clearLockErr(); }, 900);
+  }
+}
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lock-screen').classList.contains('hidden')) return;
+  if (e.key>='0'&&e.key<='9') numPress(e.key);
+  else if (e.key==='Backspace') numDel();
+});
+
+// Change passcode helpers
+function pinNav(prefix, idx) {
+  const val = document.getElementById(prefix+idx).value;
+  if (val && idx < 3) document.getElementById(prefix+(idx+1)).focus();
+}
+function openChangePasscode() {
+  ['cur','new','cnf'].forEach(p=>{ for(let i=0;i<4;i++) document.getElementById(p+i).value=''; });
+  document.getElementById('pin-change-err').textContent='';
+  document.getElementById('modal-passcode').classList.add('open');
+  setTimeout(()=>document.getElementById('cur0').focus(),80);
+}
+async function confirmChangePasscode() {
+  const getPin = p => [0,1,2,3].map(i=>document.getElementById(p+i).value).join('');
+  const cur=getPin('cur'), nw=getPin('new'), cnf=getPin('cnf');
+  const errEl=document.getElementById('pin-change-err');
+  if (cur.length<4||nw.length<4||cnf.length<4) { errEl.textContent='All fields must be 4 digits.'; return; }
+  if (nw!==cnf) { errEl.textContent='New passcodes do not match.'; return; }
+  const curHash = await sha256(cur);
+  if (curHash !== getStoredHash()) { errEl.textContent='Current passcode is incorrect.'; return; }
+  const newHash = await sha256(nw);
+  localStorage.setItem(LOCK_KEY, newHash);
+  closeModal('modal-passcode');
+  toast('Passcode updated');
+}
+
+// ── Init: check session on load ──
+if (sessionStorage.getItem(SESSION_KEY)==='1') {
+  document.getElementById('lock-screen').classList.add('hidden');
+  const hasSaved=loadSaved();
+  render();
+  if(hasSaved&&prog.candidates.length>0) toast('Restored · '+prog.candidates.length+' candidate(s)');
+}
+// Otherwise the lock screen stays visible; app boots inside checkPin() after successful entry.
+
 </script>
 </body>
 </html>
